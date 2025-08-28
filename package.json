@@ -1,0 +1,28 @@
+{
+  "name": "mattermost-to-teams-migration",
+  "version": "0.0.0",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metwse/mattermost-to-teams-migration.git"
+  },
+  "keywords": [
+    "mattermost",
+    "teams",
+    "migration"
+  ],
+  "author": "Metehan Selvi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/metwse/mattermost-to-teams-migration/issues"
+  },
+  "homepage": "https://github.com/metwse/mattermost-to-teams-migration#readme",
+  "description": "",
+  "dependencies": {
+    "@mattermost/client": "^10.10.0",
+    "dotenv": "^17.2.1"
+  }
+}
