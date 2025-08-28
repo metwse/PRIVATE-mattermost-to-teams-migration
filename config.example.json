@@ -8,7 +8,12 @@
     "webhook_url": "https://example.azure.com/workflows/...",
 
     "migrate": {
-        "team-1": ["channel-1", "channel-2"],
-        "team-2": "all"
+        "mattermost-team-name-1": {
+            "team-id": "ab459c3f-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "channels": {
+                "mattermost-channel-name-1": "teams-channel-id",
+                "mattermost-channel-name-2": "xxxxxxxxxxxxxxx617322a%40thread.tacv2"
+            }
+        }
     }
 }
