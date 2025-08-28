@@ -1,12 +1,15 @@
-import dotenv from 'dotenv'
 import Session from './webhook.mjs'
+import fs from 'fs';
 
-dotenv.config({ quiet: true })
+const config = JSON.parse(fs.readFileSync('config.json',
+    { flag: 'r', encoding: 'utf8' }
+));
 
 async function main() {
-  const session = new Session(process.env.MATTERMOST_URL, process.env.TOKEN);
-
-  console.log(await session.client.getUser(process.env.USER_ID));
+  new Session({
+    instance: config.mattermost_url,
+    token: config.token
+  });
 }
 
 main()

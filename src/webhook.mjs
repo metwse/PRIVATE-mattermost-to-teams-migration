@@ -2,8 +2,8 @@ import mattermost from '@mattermost/client'
 
 
 class Session {
-  constructor(url, token) {
-    this.url = url;
+  constructor({ instance, token }) {
+    this.url = instance;
     this.token = token;
 
     this.client = new mattermost.Client4();
