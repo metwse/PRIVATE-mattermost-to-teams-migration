@@ -2,7 +2,8 @@
     "mattermost_url": "https://mattermost.example.com",
     "token": "MATTERMOST_BOT_ACCESS_TOKEN",
 
-    "http_host": "http://localhost:1186",
+    "http_host": "localhost",
+    "http_port": 1186,
     "public_host": "https://example.com:10186",
 
     "webhook_url": "https://example.azure.com/workflows/...",

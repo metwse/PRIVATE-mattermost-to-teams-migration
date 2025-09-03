@@ -1,5 +1,5 @@
 /node_modules
 /package-lock.json
 /private
-/migration-status.json
+/progress.json
 /config.json

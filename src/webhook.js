@@ -1,0 +1,163 @@
+/* global callbackServer */
+
+class WebhookMessage {
+  constructor(url, host, messages) {
+    this.files = [];
+    this.messages = messages;
+    this.url = url;
+    this.host = host;
+
+    for (const message of messages) {
+      if (message.metadata?.files)
+        for (const file of message.metadata.files) {
+          this.files.push(file);
+        }
+    }
+  }
+
+  async send(teamId, channelId) {
+    if (this.messages.length == 0)
+      return;
+
+    const uploadPromises = this.files.map(f => callbackServer.waitfor(f.id));
+
+    await this.sendRequest({
+      type: 'message',
+      attachments: this.files.map(f => ({
+        contentType: 'file',
+        content: {
+          type: 'file',
+          name: `/mattermost/${f.user_id}/${f.id}/${f.name}`,
+          url: f.publicUrl,
+          callback: `${this.host}/${f.id}`,
+        }
+      }))
+    });
+
+    const fileUrls = await Promise.all(uploadPromises);
+
+    console.log(`[webhook] UPLOAD ${fileUrls.length} files`);
+
+    this.files.forEach((f, i) => f.oneDriveUrl = fileUrls[i]);
+
+    const callback = callbackServer.waitfor(this.messages[0].id);
+
+    const cards = [];
+
+    for (const m of this.messages) {
+      if (!m.user)
+        continue;
+
+      const card = {
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        channelId,
+        teamId,
+        content: {
+          type: 'AdaptiveCard',
+          body: [
+            {
+              type: 'ColumnSet',
+              columns: [
+                {
+                  type: 'Column',
+                  items: [
+                    {
+                      type: 'TextBlock',
+                      weight: 'Bolder',
+                      text: `@${m.user.username}`,
+                      wrap: true
+                    },
+                    {
+                      type: 'TextBlock',
+                      spacing: 'None',
+                      text: `${m.create_at}`,
+                      isSubtle: true,
+                      wrap: true
+                    }
+                  ],
+                  width: 'stretch'
+                }
+              ]
+            },
+            {
+              type: 'TextBlock',
+              text: m.message,
+              wrap: true
+            }
+          ],
+          $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+          version: '1.6',
+          actions: m.metadata.files ?
+            m.metadata.files.map(f => ({
+              type: 'Action.OpenUrl',
+              title: f.name,
+              url: f.oneDriveUrl
+            }))
+            : undefined
+        }
+      };
+
+      cards.unshift(card);
+
+      if (card.content.actions?.length > 6) {
+        cards.unshift({
+          contentType: 'application/vnd.microsoft.card.adaptive',
+          channelId,
+          teamId,
+          content: {
+            type: 'AdaptiveCard',
+            body: [
+              {
+                type: 'TextBlock',
+                text: 'SYSTEM',
+              },
+              {
+                type: 'TextBlock',
+                text: `This message contains attachments of ${m.user.username}'s previous message.`,
+              }
+            ],
+            $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+            version: '1.6',
+            actions: card.content.actions.slice(6)
+          }
+        });
+
+        const hold = cards[0];
+        cards[0] = cards[1];
+        cards[1] = hold;
+      }
+    }
+
+    await this.sendRequest({
+      type: 'message',
+      attachments:
+      [
+        ...cards,
+        {
+          contentType: 'end',
+          content: {
+            type: 'end',
+            callback: `${this.host}/${this.messages[0].id}`
+          }
+        },
+      ]
+    });
+
+    await callback;
+
+    console.log(`[webhook] SEND ${cards.length} messages`);
+  }
+
+  async sendRequest(msg) {
+    await fetch(this.url, {
+      method: 'POST',
+      body: JSON.stringify(msg),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+}
+
+
+export default WebhookMessage;
