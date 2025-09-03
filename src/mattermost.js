@@ -47,6 +47,8 @@ class Session {
           file.publicUrl = (await this.client.getFilePublicLink(file.id)).link;
     }
 
+    posts.order = posts.order.reverse();
+
     return new Messages(posts, null);
   }
 }

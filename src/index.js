@@ -31,13 +31,16 @@ async function main() {
           chunk
         );
 
-        webhookMessage.send(
+        await webhookMessage.send(
           config.migrate[team]['team-id'],
           config.migrate[team].channels[channel],
         );
       }
     }
   }
+
+  console.log("[main] DONE");
+  process.exit();
 }
 
 

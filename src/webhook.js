@@ -70,7 +70,7 @@ class WebhookMessage {
                     {
                       type: 'TextBlock',
                       spacing: 'None',
-                      text: `${m.create_at}`,
+                      text: `${new Date(m.create_at).toLocaleString('tr')}`,
                       isSubtle: true,
                       wrap: true
                     }
@@ -110,10 +110,12 @@ class WebhookMessage {
               {
                 type: 'TextBlock',
                 text: 'SYSTEM',
+                weight: 'Bolder',
               },
               {
                 type: 'TextBlock',
-                text: `This message contains attachments of ${m.user.username}'s previous message.`,
+                text: `This message contains attachments of @${m.user.username}'s previous message.`,
+                wrap: true,
               }
             ],
             $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -121,10 +123,6 @@ class WebhookMessage {
             actions: card.content.actions.slice(6)
           }
         });
-
-        const hold = cards[0];
-        cards[0] = cards[1];
-        cards[1] = hold;
       }
     }
 
@@ -132,7 +130,7 @@ class WebhookMessage {
       type: 'message',
       attachments:
       [
-        ...cards,
+        ...cards.reverse(),
         {
           contentType: 'end',
           content: {
