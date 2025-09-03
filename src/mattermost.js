@@ -55,9 +55,13 @@ class Session {
 
 // Client-side message fiter API.
 class Messages {
-  constructor(messages, lastMessageId) {
+  constructor(messages) {
     this.messages = messages;
-    this.cursor = messages.order.indexOf(lastMessageId) + 1;
+    this.cursor = 0;
+  }
+
+  setCursor(lastMessageId) {
+    this.cursor = this.messages.order.indexOf(lastMessageId) + 1;
     this.end = this.cursor == this.messages.order.length;
   }
 

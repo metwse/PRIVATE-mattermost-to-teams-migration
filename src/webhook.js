@@ -21,24 +21,25 @@ class WebhookMessage {
 
     const uploadPromises = this.files.map(f => callbackServer.waitfor(f.id));
 
-    await this.sendRequest({
-      type: 'message',
-      attachments: this.files.map(f => ({
-        contentType: 'file',
-        content: {
-          type: 'file',
-          name: `/mattermost/${f.user_id}/${f.id}/${f.name}`,
-          url: f.publicUrl,
-          callback: `${this.host}/${f.id}`,
-        }
-      }))
-    });
+    if (uploadPromises.length) {
+      await this.sendRequest({
+        type: 'message',
+        attachments: this.files.map(f => ({
+          contentType: 'file',
+          content: {
+            type: 'file',
+            name: `/mattermost/${f.user_id}/${f.id}/${f.name}`,
+            url: f.publicUrl,
+            callback: `${this.host}/${f.id}`,
+          }
+        }))
+      });
 
-    const fileUrls = await Promise.all(uploadPromises);
+      const fileUrls = await Promise.all(uploadPromises);
+      console.log(`[webhook] UPLOAD ${fileUrls.length} files`);
 
-    console.log(`[webhook] UPLOAD ${fileUrls.length} files`);
-
-    this.files.forEach((f, i) => f.oneDriveUrl = fileUrls[i]);
+      this.files.forEach((f, i) => f.oneDriveUrl = fileUrls[i]);
+    }
 
     const callback = callbackServer.waitfor(this.messages[0].id);
 
