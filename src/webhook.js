@@ -35,8 +35,8 @@ class WebhookMessage {
         }))
       });
 
+      console.log(`[webhook] UPLOADING ${this.files.length} files`);
       const fileUrls = await Promise.all(uploadPromises);
-      console.log(`[webhook] UPLOAD ${fileUrls.length} files`);
 
       this.files.forEach((f, i) => f.oneDriveUrl = fileUrls[i]);
     }
@@ -142,9 +142,8 @@ class WebhookMessage {
       ]
     });
 
+    console.log(`[webhook] SENDING ${cards.length} messages`);
     await callback;
-
-    console.log(`[webhook] SEND ${cards.length} messages`);
   }
 
   async sendRequest(msg) {

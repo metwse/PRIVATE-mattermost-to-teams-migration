@@ -14,6 +14,8 @@ class HttpCallback {
 
       console.log(`[callbackServer] GOT ${callbackStr}`);
 
+      this.lastCallback = callbackStr;
+
       if (this.callbacks[callbackStr]) {
         const callbackResponse = req._parsedUrl.query;
         this.callbacks[callbackStr](callbackResponse);
@@ -25,10 +27,11 @@ class HttpCallback {
     });
   }
 
-  async serve(host, port) {
-    this.app.listen(port, host, () => {
+  serve(host, port) {
+    return new Promise((res) => this.app.listen(port, host, () => {
       console.log(`[callbackServer] UP ${host}:${port}`);
-    });
+      res();
+    }));
   }
 
   waitfor(callbackStr) {

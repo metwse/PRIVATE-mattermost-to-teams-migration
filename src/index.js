@@ -26,9 +26,10 @@ function saveProgress() {
 }
 
 globalThis.callbackServer = new HttpCallback();
-callbackServer.serve(config.http_host, config.http_port);
 
 async function main() {
+  await callbackServer.serve(config.http_host, config.http_port);
+
   const session = new Session({
     instance: config.mattermost_url,
     token: config.token
@@ -37,15 +38,13 @@ async function main() {
   for (const team of Object.keys(config.migrate)) {
     for (const channel of Object.keys(config.migrate[team].channels)) {
       const progressKey = `${team}/${channel}`;
+      console.log(`[main/${progressKey}] FETCHING`);
       const messages = await session.getAllMessages(team, channel);
-
-      if (progress[progressKey] == 'done')
-        continue;
 
       messages.setCursor(progress[progressKey]);
 
       while (true) {
-        const chunk = messages.getChunk(24);
+        const chunk = messages.getChunk(8);
 
         if (!chunk || chunk.length == 0)
           break;
@@ -56,19 +55,37 @@ async function main() {
           chunk
         );
 
-        console.log(`[main] QUEUE ${chunk.length} messages`);
-        await webhookMessage.send(
-          config.migrate[team]['team-id'],
-          config.migrate[team].channels[channel],
-        );
+        console.log(`[main/${progressKey}] QUEUE ${chunk.length} messages`);
+        while (await Promise.any(
+          [
+            webhookMessage.send(
+              config.migrate[team]['team-id'],
+              config.migrate[team].channels[channel],
+            ),
+            new Promise(r => {
+              let last = callbackServer.lastCallback;
+
+              const timeout = () => setTimeout(() => {
+                if (last == callbackServer.lastCallback) {
+                  r('timeout');
+                } else {
+                  last = callbackServer.lastCallback;
+                  timeout();
+                }
+              }, 15000);
+
+              timeout();
+            })
+          ]
+        ) == 'timeout') {
+          console.log(`[main/${progressKey}] TIMEOUT retransmit`);
+        }
 
         progress[progressKey] = chunk[chunk.length - 1].id;
 
-        if (messages.end)
-          progress[progressKey] = 'done';
-
         saveProgress();
       }
+      console.log(`[main/${progressKey}] DONE`);
     }
   }
 
