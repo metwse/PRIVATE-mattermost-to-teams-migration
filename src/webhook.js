@@ -1,5 +1,8 @@
 /* global callbackServer */
 
+import { parseMarkdown, toAdaptiveCard } from "./rich-text.js";
+
+
 class WebhookMessage {
   constructor(url, host, messages) {
     this.files = [];
@@ -80,14 +83,13 @@ class WebhookMessage {
                 }
               ]
             },
-            {
-              type: 'TextBlock',
-              text: m.message,
-              wrap: true
-            }
+            ...toAdaptiveCard(parseMarkdown(m.message))
           ],
           $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
           version: '1.6',
+          msteams: {
+            width: 'Full'
+          },
           actions: m.metadata.files ?
             m.metadata.files.map(f => ({
               type: 'Action.OpenUrl',
